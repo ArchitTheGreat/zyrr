@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LazyImage from "./LazyImage";
 
 interface TriptychPreviewProps {
   panelImages: {
@@ -34,11 +35,10 @@ export default function TriptychPreview({
           onMouseEnter={() => interactive && setHoveredPanel('left')}
           onMouseLeave={() => interactive && setHoveredPanel(null)}
         >
-          <img 
+          <LazyImage 
             src={panelImages.left} 
             alt="Left panel"
             className="w-full h-full object-cover transition-transform duration-700"
-            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent pointer-events-none" />
           {hoveredPanel === 'left' && (
@@ -56,11 +56,10 @@ export default function TriptychPreview({
           onMouseEnter={() => interactive && setHoveredPanel('center')}
           onMouseLeave={() => interactive && setHoveredPanel(null)}
         >
-          <img 
+          <LazyImage 
             src={panelImages.center} 
             alt="Center panel"
             className="w-full h-full object-cover transition-transform duration-700"
-            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/15 to-transparent pointer-events-none" />
           {hoveredPanel === 'center' && (
@@ -79,11 +78,10 @@ export default function TriptychPreview({
           onMouseEnter={() => interactive && setHoveredPanel('right')}
           onMouseLeave={() => interactive && setHoveredPanel(null)}
         >
-          <img 
+          <LazyImage 
             src={panelImages.right} 
             alt="Right panel"
             className="w-full h-full object-cover transition-transform duration-700"
-            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30 pointer-events-none" />
           {hoveredPanel === 'right' && (

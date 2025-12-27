@@ -95,18 +95,19 @@ export default function Home() {
   return (
     <div 
       ref={galleryRef}
-      className="snap-y snap-mandatory h-screen overflow-y-scroll snap-proximity bg-black" 
+      className="snap-y snap-mandatory h-screen overflow-y-scroll snap-always bg-black" 
       style={{ 
-        scrollBehavior: 'smooth',
+        scrollBehavior: 'auto',
         overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch'
+        WebkitOverflowScrolling: 'touch',
+        scrollSnapType: 'y mandatory'
       }}
     >
       {/* Gallery Items */}
       {posters.map((poster, index) => (
         <section 
           key={poster.id}
-          className={`snap-start h-screen flex items-center justify-center bg-gradient-to-b from-black/95 via-black/90 to-black/95 backdrop-blur-[2px] relative group transition-colors duration-500 ${
+          className={`snap-start snap-always h-screen flex items-center justify-center bg-gradient-to-b from-black/95 via-black/90 to-black/95 backdrop-blur-[2px] relative group transition-colors duration-500 ${
             isScrolling && Math.abs(index - currentIndex) > 1 ? 'opacity-95' : 'opacity-100'
           }`}
           style={{
