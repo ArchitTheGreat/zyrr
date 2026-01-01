@@ -16,8 +16,20 @@ export async function initializeDatabase() {
 
   let db;
   
+  // Check if JSON mode is enabled (default to JSON if no database config)
+  if (process.env.USE_JSON_DATA === 'true' || 
+      (!process.env.TURSO_DATABASE_URL && !process.env.TURSO_AUTH_TOKEN && !process.env.SQLITE_DATABASE_PATH)) {
+    console.log('Using JSON data source...');
+    const { loadPostersFromJson, getPosterBySlugFromJson } = await import('@/lib/utils/jsonLoader');
+    db = {
+      getPosters: loadPostersFromJson,
+      getPosterBySlug: getPosterBySlugFromJson,
+      createPoster: async () => { throw new Error('Create operation not supported in JSON mode'); },
+      type: 'json' as const
+    };
+  }
   // Check if Turso is configured
-  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+  else if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
     console.log('Initializing Turso database...');
     const { initializeDatabase: initTurso } = await import('@/lib/db/turso');
     await initTurso();

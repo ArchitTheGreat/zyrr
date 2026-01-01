@@ -5,16 +5,27 @@ import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useResponsiveDesign } from "@/hooks/useResponsiveDesign";
 import { useAmbientAnimation } from "@/hooks/useAmbientAnimation";
-import { posters } from "@/lib/posters";
+import { getPosters, Poster } from "@/lib/posters";
 import PosterModal from "@/components/PosterModal";
 import TriptychPreview from "@/components/TriptychPreview";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import GalleryMetadata from "@/components/GalleryMetadata";
 
 export default function Home() {
-  const [selectedPoster, setSelectedPoster] = useState<typeof posters[0] | null>(null);
+  const [selectedPoster, setSelectedPoster] = useState<Poster | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [posters, setPosters] = useState<Poster[]>([]);
   const galleryRef = useRef<HTMLDivElement>(null);
+
+  // Load posters data
+  useEffect(() => {
+    const loadData = async () => {
+      const loadedPosters = await getPosters();
+      setPosters(loadedPosters);
+      setIsLoading(false);
+    };
+    loadData();
+  }, []);
 
   // Enhanced scroll management
   const { currentIndex, isScrolling, scrollNext, scrollPrev } = useSmoothScroll({
@@ -95,8 +106,8 @@ export default function Home() {
   return (
     <div 
       ref={galleryRef}
-      className="snap-y snap-mandatory h-screen overflow-y-scroll snap-always bg-black" 
-      style={{ 
+      className="snap-y snap-mandatory h-screen overflow-y-scroll snap-always bg-black"
+      style={{
         scrollBehavior: 'auto',
         overscrollBehavior: 'contain',
         WebkitOverflowScrolling: 'touch',
@@ -105,15 +116,15 @@ export default function Home() {
     >
       {/* Gallery Items */}
       {posters.map((poster, index) => (
-        <section 
-          key={poster.id}
-          className={`snap-start snap-always h-screen flex items-center justify-center bg-gradient-to-b from-black/95 via-black/90 to-black/95 backdrop-blur-[2px] relative group transition-colors duration-500 ${
-            isScrolling && Math.abs(index - currentIndex) > 1 ? 'opacity-95' : 'opacity-100'
-          }`}
-          style={{
-            transform: isScrolling ? `translateY(${(index - currentIndex) * float}px)` : 'none'
-          }}
-        >
+          <section 
+            key={poster.id}
+            className={`snap-start snap-always h-screen flex items-center justify-center bg-gradient-to-b from-black/95 via-black/90 to-black/95 backdrop-blur-[2px] relative group transition-colors duration-500 ${
+              isScrolling && Math.abs(index - currentIndex) > 1 ? 'opacity-95' : 'opacity-100'
+            }`}
+            style={{
+              transform: isScrolling ? `translateY(${(index - currentIndex) * float}px)` : 'none'
+            }}
+          >
           {/* Loading State */}
           {isLoading && (
             <SkeletonLoader type="gallery" className="w-full h-full" />
@@ -146,7 +157,7 @@ export default function Home() {
           {!isLoading && (
             <div className={`relative z-10 text-center text-white ${responsiveStyles.padding} ${responsiveStyles.maxWidth} mx-auto`}>
               {/* Triptych Preview - Now the Main Focus */}
-              <div className="max-w-4xl mx-auto mb-6 cursor-pointer group" onClick={() => handlePosterClick(poster)}>
+              <div className="max-w-5xl mx-auto mb-6 cursor-pointer group" onClick={() => handlePosterClick(poster)}>
                 <TriptychPreview 
                   panelImages={poster.panelImages}
                   className="opacity-100 group-hover:opacity-100 transition-all duration-500 scale-110"

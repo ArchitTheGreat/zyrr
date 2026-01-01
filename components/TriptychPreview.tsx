@@ -23,14 +23,14 @@ export default function TriptychPreview({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Triptych Panels */}
-      <div className="flex gap-3 bg-black rounded-lg overflow-hidden shadow-2xl">
+      <div className="flex gap-4 bg-black rounded-lg overflow-hidden shadow-2xl max-w-4xl mx-auto">
         {/* Left Panel */}
         <div 
-          className={`flex-1 aspect-[2/3] bg-gray-900 relative group cursor-pointer transition-all duration-500 ${
-            hoveredPanel === 'left' ? 'scale-105 z-20' : 
-            hoveredPanel === 'center' ? 'scale-95 opacity-75' : 
-            hoveredPanel === 'right' ? 'scale-95 opacity-75' : 
-            'hover:scale-102'
+          className={`flex-1 aspect-[4/3] bg-gray-900 relative group cursor-pointer transition-all duration-500 ${
+            hoveredPanel === 'left' ? 'scale-110 z-20' : 
+            hoveredPanel === 'center' ? 'scale-90 opacity-75' : 
+            hoveredPanel === 'right' ? 'scale-90 opacity-75' : 
+            'hover:scale-105'
           }`}
           onMouseEnter={() => interactive && setHoveredPanel('left')}
           onMouseLeave={() => interactive && setHoveredPanel(null)}
@@ -48,10 +48,10 @@ export default function TriptychPreview({
 
         {/* Center Panel (Emphasized) */}
         <div 
-          className={`flex-1 aspect-[2/3] bg-gray-900 relative group cursor-pointer border-x border-gray-800 transition-all duration-500 ${
-            hoveredPanel === 'center' ? 'scale-110 z-30 shadow-xl' : 
-            hoveredPanel ? 'scale-95 opacity-75' : 
-            'hover:scale-102'
+          className={`flex-1 aspect-[4/3] bg-gray-900 relative group cursor-pointer border-x border-gray-800 transition-all duration-500 ${
+            hoveredPanel === 'center' ? 'scale-115 z-30 shadow-xl' : 
+            hoveredPanel ? 'scale-90 opacity-75' : 
+            'hover:scale-105'
           }`}
           onMouseEnter={() => interactive && setHoveredPanel('center')}
           onMouseLeave={() => interactive && setHoveredPanel(null)}
@@ -69,11 +69,11 @@ export default function TriptychPreview({
 
         {/* Right Panel */}
         <div 
-          className={`flex-1 aspect-[2/3] bg-gray-900 relative group cursor-pointer transition-all duration-500 ${
-            hoveredPanel === 'right' ? 'scale-105 z-20' : 
-            hoveredPanel === 'center' ? 'scale-95 opacity-75' : 
-            hoveredPanel === 'left' ? 'scale-95 opacity-75' : 
-            'hover:scale-102'
+          className={`flex-1 aspect-[4/3] bg-gray-900 relative group cursor-pointer transition-all duration-500 ${
+            hoveredPanel === 'right' ? 'scale-110 z-20' : 
+            hoveredPanel === 'center' ? 'scale-90 opacity-75' : 
+            hoveredPanel === 'left' ? 'scale-90 opacity-75' : 
+            'hover:scale-105'
           }`}
           onMouseEnter={() => interactive && setHoveredPanel('right')}
           onMouseLeave={() => interactive && setHoveredPanel(null)}
