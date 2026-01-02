@@ -1,174 +1,86 @@
-// Database utility functions for Zyrr Gallery
+// JSON-only utility functions for Zyrr Gallery
 
-// Cache for database connections and results
-const dbCache = new Map();
-const queryCache = new Map();
-
-/**
- * Initialize the database based on environment variables with caching
- * @returns Database client and functions
- */
-export async function initializeDatabase() {
-  // Check cache first
-  if (dbCache.has('database')) {
-    return dbCache.get('database');
-  }
-
-  let db;
-  
-  // Check if JSON mode is enabled (default to JSON if no database config)
-  if (process.env.USE_JSON_DATA === 'true' || 
-      (!process.env.TURSO_DATABASE_URL && !process.env.TURSO_AUTH_TOKEN && !process.env.SQLITE_DATABASE_PATH)) {
-    console.log('Using JSON data source...');
-    const { loadPostersFromJson, getPosterBySlugFromJson } = await import('@/lib/utils/jsonLoader');
-    db = {
-      getPosters: loadPostersFromJson,
-      getPosterBySlug: getPosterBySlugFromJson,
-      createPoster: async () => { throw new Error('Create operation not supported in JSON mode'); },
-      type: 'json' as const
-    };
-  }
-  // Check if Turso is configured
-  else if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
-    console.log('Initializing Turso database...');
-    const { initializeDatabase: initTurso } = await import('@/lib/db/turso');
-    await initTurso();
-    db = {
-      getPosters: (await import('@/lib/db/turso')).getPosters,
-      getPosterBySlug: (await import('@/lib/db/turso')).getPosterBySlug,
-      createPoster: (await import('@/lib/db/turso')).createPoster,
-      type: 'turso' as const
-    };
-  } else {
-    // Fall back to SQLite
-    console.log('Initializing SQLite database...');
-    const { initializeDatabase: initSqlite, getPosters, getPosterBySlug, createPoster } = await import('@/lib/db/sqlite');
-    initSqlite();
-    db = {
-      getPosters,
-      getPosterBySlug,
-      createPoster,
-      type: 'sqlite' as const
-    };
-  }
-
-  // Cache the database instance
-  dbCache.set('database', db);
-  return db;
-}
+// Cache for JSON data
+const jsonCache = new Map();
 
 /**
- * Cached version of getPosters with TTL
+ * Get cached posters with automatic cache invalidation
  */
 export async function getCachedPosters() {
   const cacheKey = 'posters';
   const cacheTTL = 5 * 60 * 1000; // 5 minutes
   
-  const cached = queryCache.get(cacheKey);
+  // Check cache first
+  const cached = jsonCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < cacheTTL) {
     return cached.data;
   }
 
-  const db = await initializeDatabase();
-  const posters = await db.getPosters();
-  
-  // Cache the result
-  queryCache.set(cacheKey, {
-    data: posters,
-    timestamp: Date.now()
-  });
+  try {
+    const { loadPostersFromJson } = await import('@/lib/utils/jsonLoader');
+    const posters = await loadPostersFromJson();
+    
+    // Cache the result
+    jsonCache.set(cacheKey, {
+      data: posters,
+      timestamp: Date.now()
+    });
 
-  return posters;
+    return posters;
+  } catch (error) {
+    console.error('Error fetching cached posters:', error);
+    throw error;
+  }
 }
 
 /**
- * Cached version of getPosterBySlug with TTL
+ * Get a poster by slug with caching
  */
-export async function getCachedPosterBySlug(slug: string) {
-  const cacheKey = `poster:${slug}`;
+export async function getPosterBySlug(slug: string) {
+  const cacheKey = `poster-${slug}`;
   const cacheTTL = 10 * 60 * 1000; // 10 minutes
   
-  const cached = queryCache.get(cacheKey);
+  // Check cache first
+  const cached = jsonCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < cacheTTL) {
     return cached.data;
   }
 
-  const db = await initializeDatabase();
-  const poster = await db.getPosterBySlug(slug);
-  
-  // Cache the result
-  queryCache.set(cacheKey, {
-    data: poster,
-    timestamp: Date.now()
-  });
+  try {
+    const { getPosterBySlugFromJson } = await import('@/lib/utils/jsonLoader');
+    const poster = await getPosterBySlugFromJson(slug);
+    
+    // Cache the result
+    jsonCache.set(cacheKey, {
+      data: poster,
+      timestamp: Date.now()
+    });
 
-  return poster;
+    return poster;
+  } catch (error) {
+    console.error('Error fetching poster by slug:', error);
+    throw error;
+  }
 }
 
 /**
- * Clear all caches
+ * Clear all cached data
  */
 export function clearCache() {
-  queryCache.clear();
+  jsonCache.clear();
+  console.log('JSON cache cleared');
 }
 
 /**
- * Seed the database with initial data
+ * Create a new poster (not supported in JSON mode)
  */
-export async function seedDatabase() {
-  const db = await initializeDatabase();
-  
-  // Check if database already has data
-  const existingPosters = await db.getPosters();
-  if (existingPosters.length > 0) {
-    console.log('Database already seeded with', existingPosters.length, 'posters');
-    return;
-  }
-
-  console.log('Seeding database with initial posters...');
-  
-  // Import sample data
-  const { posters } = await import('@/lib/posters');
-  
-  // Insert each poster
-  for (const poster of posters) {
-    try {
-      await db.createPoster({
-        ...poster,
-        created_at: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error seeding poster', poster.id, ':', error);
-    }
-  }
-
-  console.log('Database seeded successfully with', posters.length, 'posters');
+export async function createPoster(posterData: any) {
+  throw new Error('Create operation not supported in JSON mode');
 }
 
 /**
- * Migrate from static data to database
+ * Get database type for debugging
  */
-export async function migrateToDatabase() {
-  const db = await initializeDatabase();
-  
-  // Clear existing data
-  if (db.type === 'sqlite') {
-    const sqliteDb = (await import('better-sqlite3')).default;
-    const dbPath = process.cwd() + '/gallery.db';
-    const dbInstance = new sqliteDb(dbPath);
-    dbInstance.exec('DELETE FROM posters');
-    dbInstance.close();
-  }
-  
-  // Import and insert all posters
-  const { posters } = await import('@/lib/posters');
-  
-  for (const poster of posters) {
-    await db.createPoster({
-      ...poster,
-      created_at: new Date().toISOString()
-    });
-  }
-
-  return posters.length;
+export function getDatabaseType() {
+  return 'json';
 }

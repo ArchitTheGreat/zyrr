@@ -1,7 +1,7 @@
-// Next.js API route for posters with optimized SSR and caching
+// Next.js API route for posters with JSON-only data
 import { NextResponse } from 'next/server'
 import { Poster } from '@/lib/posters'
-import { getCachedPosters, clearCache } from '@/lib/utils/database'
+import { loadPostersFromJson } from '@/lib/utils/jsonLoader'
 
 // Cache control headers for better performance
 const CACHE_CONTROL = {
@@ -25,7 +25,7 @@ async function getOptimizedPosters() {
   }
 
   try {
-    const posters = await getCachedPosters();
+    const posters = await loadPostersFromJson();
     
     // Optimize poster data for SSR
     staticPosters = posters.map(poster => ({
